@@ -6,7 +6,8 @@ INCLUDES = 	-Iinclude \
 LDFLAGS = -shared
 
 TARGET = forrnsow.clap
-SRC = src/entry.cpp
+SRC = src/entry.cpp \
+	  src/synthesis.cpp
 
 all: $(TARGET)
 

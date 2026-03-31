@@ -13,6 +13,10 @@
 #include <clap/helpers/host-proxy.hh>
 #include <clap/helpers/plugin.hxx>
 
+// ~ Other files. ~
+
+#include "synthesis.hpp"
+
 // State the plugin features
 static const char* plugin_features[] = {
 	CLAP_PLUGIN_FEATURE_INSTRUMENT,
@@ -35,19 +39,23 @@ static const clap_plugin_descriptor_t plugin_descriptor = {
 
 // ~ Create the plugin object. ~
 
-class Synth : public clap::helpers::Plugin<
+class Plugin : public clap::helpers::Plugin<
     clap::helpers::MisbehaviourHandler::Ignore, 
     clap::helpers::CheckingLevel::Maximal> 
 {
 public:
-    Synth(const clap_host_t *host) 
+    Plugin(const clap_host_t *host) 
         : clap::helpers::Plugin<
             clap::helpers::MisbehaviourHandler::Ignore, 
             clap::helpers::CheckingLevel::Maximal>
           (&plugin_descriptor, host) 
     {}
 
+	Synth synth;
     clap_process_status process(const clap_process_t *process) noexcept override {
+		float** output_buffers = process->audio_outputs[0].data32;
+		uint32_t buffer_size = process->frames_count;
+		synth.process(output_buffers, buffer_size);
         return CLAP_PROCESS_CONTINUE; 
     }
 
@@ -87,7 +95,7 @@ public:
     if (strcmp(plugin_id, plugin_descriptor.id) != 0) return nullptr;
 
     // Create a new instance of our Synth object
-    auto *my_plug = new Synth(host);
+    auto *my_plug = new Plugin(host);
     return my_plug->clapPlugin();
 } 
 
