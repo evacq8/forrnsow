@@ -55,7 +55,28 @@ public:
     clap_process_status process(const clap_process_t *process) noexcept override {
 		float** output_buffers = process->audio_outputs[0].data32;
 		uint32_t buffer_size = process->frames_count;
-		synth.process(output_buffers, buffer_size);
+
+		// ~ Midi ~
+		// Create SynthMidiNoteEvents Vector from clap process midi data
+		std::vector<SynthMidiNoteEvent> midi_events;
+		for(uint32_t i = 0; i < process->in_events->size(process->in_events); i++) {
+			// Get the generic event header pointer
+			const clap_event_header_t* event_header = process->in_events->get(process->in_events, i);
+			if(event_header->space_id != CLAP_CORE_EVENT_SPACE_ID) continue;
+			if(event_header->type == CLAP_EVENT_MIDI) {
+				// Once verified its a midi event, cast it to a midi event
+				clap_event_midi_t* event_midi = (clap_event_midi_t*)event_header;
+				midi_events.push_back({
+					event_header->time,
+					event_midi->data[1],
+					(double)event_midi->data[2]/127.0,
+					(event_midi->data[0] & 0xF0) == 0x90 ? true : false
+				});
+			} else printf("Unknown event header type.\n");
+		}
+
+		// ~ Allow Synth to process, then continue ~
+		synth.process(output_buffers, buffer_size, midi_events);
         return CLAP_PROCESS_CONTINUE; 
     }
 
@@ -80,6 +101,17 @@ public:
 		info->port_type = CLAP_PORT_STEREO;
 		// No input pair to share memory with so give invalid ID.
 		info->in_place_pair = CLAP_INVALID_ID; 
+		return true;
+	}
+
+	// ~ Say we support MIDI ~
+	bool implementsNotePorts() const noexcept override { return true; }
+	uint32_t notePortsCount(bool isInput) const noexcept override { return isInput ? 1 : 0; }
+	bool notePortsInfo(uint32_t index, bool isInput, clap_note_port_info_t *info) const noexcept override {
+		if (!isInput || index > 0) return false;
+		info->id = 0;
+		info->supported_dialects = CLAP_NOTE_DIALECT_MIDI;
+		strncpy(info->name, "Note Input", sizeof(info->name));
 		return true;
 	}
 }; // End of Plugin class
