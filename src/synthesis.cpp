@@ -6,16 +6,17 @@
 #include <stdio.h>
 #include <math.h>
 
+
 // Note object constructor
 Note::Note() {
-	active = false;
+	envelope.state = Envelope::IDLE;
 }
 
 Notes::Notes() {
 	// Create MAX_POLYPHONY amt of note slots and set them to inactive
 	elements.resize(MAX_POLYPHONY);
 	for (Note& n : elements) {
-		n.active = false;
+		n.envelope.state = Envelope::IDLE;
 	}
 }
 
@@ -26,8 +27,8 @@ void Notes::handle_note_event(SynthMidiNoteEvent& note_event, uint32_t& current_
 	if(note_event.note_on) {
 		// Replace the first inactive note with this one.
 		for(size_t i = 0; i < elements.size(); i++) {
-			if(elements[i].active == true) continue;
-			elements[i].active = true;
+			if(elements[i].envelope.state != Envelope::IDLE) continue;
+			elements[i].envelope.state = Envelope::ATTACK;
 			elements[i].note_number = note_event.note;
 			elements[i].phase = (double)rand() / RAND_MAX; // Randomize initial phase
 			elements[i].increment = (440.0f * powf(2.0f, (note_event.note - 69.0f) / 12.0f)/44100); // ASSUMES SAMPLE RATE OF 44100
@@ -39,8 +40,8 @@ void Notes::handle_note_event(SynthMidiNoteEvent& note_event, uint32_t& current_
 		// Deactivate the first active note with this same note_number
 		for(size_t i = 0; i < elements.size(); i++) {
 			// Skip notes who are either inactive or have different note number than the event
-			if(elements[i].active == false || elements[i].note_number != note_event.note) continue;
-			elements[i].active = false;
+			if(elements[i].envelope.state == Envelope::IDLE || elements[i].note_number != note_event.note) continue;
+			elements[i].envelope.state = Envelope::RELEASE;
 			return;
 		}
 	}
@@ -73,12 +74,17 @@ void Synth::process(float** output_buffers, uint32_t buffer_size, std::vector<Sy
 		// Audio
 		float mixed_sample = 0.0f;
 		for(size_t n = 0; n < notes.size(); n++) {
-			if(notes[n].active) {
-				mixed_sample += (float)sin(2.0 * M_PI * notes[n].phase);
-				// Update phase for the next frame
-				notes[n].phase += notes[n].increment;
-				if(notes[n].phase >= 1.0) notes[n].phase -= 1.0;
-			}
+			if(notes[n].envelope.state == Envelope::IDLE) continue;
+
+			// Update envelope levels
+			float gain = notes[n].envelope.update();
+	
+			// Generate Sample
+			mixed_sample += (float)sin(2.0 * M_PI * notes[n].phase) * gain;
+
+			// Update phase for the next frame
+			notes[n].phase += notes[n].increment;
+			if(notes[n].phase >= 1.0) notes[n].phase -= 1.0;
 		}
 		output_buffers[0][i] = mixed_sample * 0.2f;
 		output_buffers[1][i] = mixed_sample * 0.2f;

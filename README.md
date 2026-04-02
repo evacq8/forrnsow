@@ -12,6 +12,7 @@ i dream of making it more modular and adding a gui (if i don't give up which is 
 
 * midi parsing
 * polyphony
+* linear adsr envelopes
 
 ## building from source
 
@@ -29,8 +30,10 @@ cp forrnsow.clap ~/.clap/forrnsow.clap
 ## todo
 
 - [ ] seperate note logic into its own file
-- [ ] envelopes
-- [ ] get sample rate from daw to adjust increment calculations (assumes 44100 hz right now)
+- [x] adsr envelopes
+- [ ] non-linear adsr envelopes
+- [ ] oscillator class & lfos
+- [ ] get sample rate from daw to adjust calculations (assumes 44100 hz right now)
 
 ### how it works (for reference in-case i forgot)
 

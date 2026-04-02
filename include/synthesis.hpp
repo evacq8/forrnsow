@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <vector>
 
+#include "envelope.hpp"
+
 #define MAX_POLYPHONY 20
 
 // Struct used for sending Midi note event info to the synth
@@ -20,7 +22,7 @@ class Note {
 		double increment;
 		// Stuff that changes every frame
 		double phase; // Normalized between 0.0 - 1.0
-		bool active; // Note in use?
+		Envelope envelope;
 
 		Note();
 };

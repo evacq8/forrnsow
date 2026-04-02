@@ -7,7 +7,8 @@ LDFLAGS = -shared
 
 TARGET = forrnsow.clap
 SRC = src/entry.cpp \
-	  src/synthesis.cpp
+	  src/synthesis.cpp \
+	  src/envelope.cpp
 
 all: $(TARGET)
 
