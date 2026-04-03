@@ -10,6 +10,7 @@
 // Note object constructor
 Note::Note() {
 	envelope.state = Envelope::IDLE;
+	primary_oscillator.function = Waveforms::sine;
 }
 
 Notes::Notes() {
@@ -30,8 +31,10 @@ void Notes::handle_note_event(SynthMidiNoteEvent& note_event, uint32_t& current_
 			if(elements[i].envelope.state != Envelope::IDLE) continue;
 			elements[i].envelope.state = Envelope::ATTACK;
 			elements[i].note_number = note_event.note;
-			elements[i].phase = (double)rand() / RAND_MAX; // Randomize initial phase
-			elements[i].increment = (440.0f * powf(2.0f, (note_event.note - 69.0f) / 12.0f)/44100); // ASSUMES SAMPLE RATE OF 44100
+			elements[i].primary_oscillator.set_frequency_from_midi_note(
+				note_event.note,
+				44100
+			); // ASSUMES SAMPLE RATE OF 44100
 			return;
 		}
 	} 
@@ -76,18 +79,13 @@ void Synth::process(float** output_buffers, uint32_t buffer_size, std::vector<Sy
 		for(size_t n = 0; n < notes.size(); n++) {
 			if(notes[n].envelope.state == Envelope::IDLE) continue;
 
-			// Update envelope levels
+			// Update envelope levelz
 			float gain = notes[n].envelope.update();
-	
 			// Generate Sample
-			mixed_sample += (float)sin(2.0 * M_PI * notes[n].phase) * gain;
-
-			// Update phase for the next frame
-			notes[n].phase += notes[n].increment;
-			if(notes[n].phase >= 1.0) notes[n].phase -= 1.0;
+			mixed_sample += notes[n].primary_oscillator.tick() * gain * 0.2f;
 		}
-		output_buffers[0][i] = mixed_sample * 0.2f;
-		output_buffers[1][i] = mixed_sample * 0.2f;
+		output_buffers[0][i] = mixed_sample;
+		output_buffers[1][i] = mixed_sample;
 	}
 }
 

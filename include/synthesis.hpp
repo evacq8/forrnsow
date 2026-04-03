@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "envelope.hpp"
+#include "oscillator.hpp"
 
 #define MAX_POLYPHONY 20
 
@@ -17,12 +18,9 @@ struct SynthMidiNoteEvent {
 // A single note
 class Note {
 	public:
-		// Stuff that you assign on creation
 		uint16_t note_number; // MIDI note number where 0 is a C-1 and 127 is a G9
-		double increment;
-		// Stuff that changes every frame
-		double phase; // Normalized between 0.0 - 1.0
 		Envelope envelope;
+		Oscillator primary_oscillator;
 
 		Note();
 };

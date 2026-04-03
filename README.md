@@ -32,7 +32,7 @@ cp forrnsow.clap ~/.clap/forrnsow.clap
 - [ ] seperate note logic into its own file
 - [x] adsr envelopes
 - [ ] non-linear adsr envelopes
-- [ ] oscillator class & lfos
+- [x] oscillator class
 - [ ] get sample rate from daw to adjust calculations (assumes 44100 hz right now)
 
 ### how it works (for reference in-case i forgot)
