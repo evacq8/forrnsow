@@ -10,6 +10,9 @@ namespace Waveforms {
 	inline float sine(float phase) {
 		return sin(phase * 2 * M_PI);
 	};
+	inline float sawtooth(float phase) {
+		return (phase * 2.0f) - 1.0f;
+	};
 }
 
 class Oscillator {

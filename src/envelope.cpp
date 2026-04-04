@@ -5,10 +5,10 @@
 
 // Constructor
 Envelope::Envelope() {
-	attack_time = 0.005f;
-	decay_time = 0.1f;
-	sustain_level = 0.7f;
-	release_time = 0.05f;
+	attack_time = 0.150f;
+	decay_time = 0.2f;
+	sustain_level = 0.8f;
+	release_time = 0.4f;
 
 	level = 0.0f;
 	state = IDLE;

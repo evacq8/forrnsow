@@ -4,6 +4,7 @@
 
 #include "envelope.hpp"
 #include "oscillator.hpp"
+#include "biquad.hpp"
 
 #define MAX_POLYPHONY 20
 
@@ -21,6 +22,7 @@ class Note {
 		uint16_t note_number; // MIDI note number where 0 is a C-1 and 127 is a G9
 		Envelope envelope;
 		Oscillator primary_oscillator;
+		BiquadBandpassBank formants;
 
 		Note();
 };

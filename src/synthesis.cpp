@@ -10,7 +10,12 @@
 // Note object constructor
 Note::Note() {
 	envelope.state = Envelope::IDLE;
-	primary_oscillator.function = Waveforms::sine;
+	primary_oscillator.function = Waveforms::sawtooth;
+	// formants for the 'ahh' vowel
+	formants.add(650.0f,  1.2f, 1.0f, 44100);
+    formants.add(1080.0f, 2.5f, 0.4f, 44100);
+    formants.add(2650.0f, 4.0f, 0.2f, 44100);
+    formants.add(3200.0f, 6.0f, 0.3f, 44100);
 }
 
 Notes::Notes() {
@@ -28,9 +33,10 @@ void Notes::handle_note_event(SynthMidiNoteEvent& note_event, uint32_t& current_
 	if(note_event.note_on) {
 		// Replace the first inactive note with this one.
 		for(size_t i = 0; i < elements.size(); i++) {
-			if(elements[i].envelope.state != Envelope::IDLE) continue;
+			if(elements[i].envelope.state != Envelope::IDLE && elements[i].envelope.state != Envelope::RELEASE) continue;
 			elements[i].envelope.state = Envelope::ATTACK;
 			elements[i].note_number = note_event.note;
+			elements[i].formants.reset_history();
 			elements[i].primary_oscillator.set_frequency_from_midi_note(
 				note_event.note,
 				44100
@@ -81,8 +87,12 @@ void Synth::process(float** output_buffers, uint32_t buffer_size, std::vector<Sy
 
 			// Update envelope levelz
 			float gain = notes[n].envelope.update();
+
+
 			// Generate Sample
-			mixed_sample += notes[n].primary_oscillator.tick() * gain * 0.2f;
+			float sample = notes[n].primary_oscillator.tick() * gain * 0.2f;
+			sample = notes[n].formants.process(sample);
+			mixed_sample += sample;
 		}
 		output_buffers[0][i] = mixed_sample;
 		output_buffers[1][i] = mixed_sample;

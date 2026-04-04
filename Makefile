@@ -9,7 +9,8 @@ TARGET = forrnsow.clap
 SRC = src/entry.cpp \
 	  src/synthesis.cpp \
 	  src/envelope.cpp \
-	  src/oscillator.cpp
+	  src/oscillator.cpp \
+	  src/biquad.cpp
 
 all: $(TARGET)
 
