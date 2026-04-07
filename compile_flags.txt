@@ -1,3 +1,5 @@
 -Iinclude
 -Iextern/clap/include
 -Iextern/clap-helpers/include
+-Iextern/imgui
+-Iextern/imgui/backends

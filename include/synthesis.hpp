@@ -43,6 +43,7 @@ class Notes {
 
 class Synth {
 	public:
+		Notes notes;
 		Synth();
 		void process(float** output_buffers, uint32_t buffer_size, std::vector<SynthMidiNoteEvent>& midi_note_events);
 };

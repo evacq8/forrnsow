@@ -4,6 +4,7 @@
 #include <string.h>
 #include <clap/clap.h>
 #include <stdio.h>
+#include <memory>
 
 // ~ 'Glue' headers that remove boiler plate. ~
 
@@ -16,6 +17,7 @@
 // ~ Other files. ~
 
 #include "synthesis.hpp"
+#include "gui.hpp"
 
 // State the plugin features
 static const char* plugin_features[] = {
@@ -44,6 +46,8 @@ class Plugin : public clap::helpers::Plugin<
     clap::helpers::CheckingLevel::Maximal> 
 {
 public:
+	clap_id timer_id = CLAP_INVALID_ID;
+
     Plugin(const clap_host_t *host) 
         : clap::helpers::Plugin<
             clap::helpers::MisbehaviourHandler::Ignore, 
@@ -80,7 +84,62 @@ public:
         return CLAP_PROCESS_CONTINUE; 
     }
 
-	
+	// ~ GUI ~
+	std::unique_ptr<GUI> gui;
+	clap_window_t parentWindow;
+	bool implementsGui() const noexcept override {return true;}
+	bool guiIsApiSupported(const char *api, bool isFloating) noexcept override {
+		if (isFloating) {
+			printf("[forrnsow] Floating gui is not supported.\n");
+			return false;
+		}
+		if(strcmp(api, CLAP_WINDOW_API_X11) == 0) {return true;}
+		printf("[forrnsow] Unsupported Window API '%s'.\n", api);
+		return false;
+	}
+	bool guiCreate(const char *api, bool isFloating) noexcept override {
+		return true;
+	}
+	bool guiGetSize(uint32_t *width, uint32_t *height) noexcept override {
+		*width = 800;
+		*height = 600;
+		return true;
+	}
+	bool guiSetParent(const clap_window *window) noexcept override {
+		parentWindow = *window;
+		return true;
+	}
+	virtual bool guiShow() noexcept override {
+		gui = std::make_unique<GUI>(&parentWindow, &synth);
+		// Start render loop timer
+		if(_host.canUseTimerSupport()) {
+			_host.timerSupportRegister(16, &timer_id);
+		}
+		return true;
+	}
+	// After many hours of debugging I realized you need to return true on this for gui to work :'D
+	bool guiSetSize(uint32_t width, uint32_t height) noexcept override {return true;}
+	bool guiHide() noexcept override {
+		// Stop render loop timer
+		if(timer_id != CLAP_INVALID_ID) {
+			_host.timerSupportUnregister(timer_id);
+			timer_id = CLAP_INVALID_ID;
+		}
+		return true;
+	}
+	void guiDestroy() noexcept override {
+		gui.reset();
+	};
+
+
+	// ~ Timer ~
+	bool implementsTimerSupport() const noexcept override { return true; }
+	void onTimer(clap_id id) noexcept override {
+		if (id == timer_id && gui) {
+			gui->render();
+		}
+	}
+
 	// ~ Audio Ports ~
 	// Do we use audio ports? Yes.
 	bool implementsAudioPorts() const noexcept override { return true; }

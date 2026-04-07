@@ -62,9 +62,6 @@ Synth::Synth() {
 
 }
 
-// Create notes object
-Notes notes;
-
 // ~ MAIN PROCESS LOOP ~
 // Output must be between -1.0 - 1.0
 void Synth::process(float** output_buffers, uint32_t buffer_size, std::vector<SynthMidiNoteEvent>& midi_note_events) {
