@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <stdio.h>
 #include <math.h>
-
+#include <atomic>
 
 // Note object constructor
 Note::Note() {
@@ -62,11 +62,28 @@ Synth::Synth() {
 
 }
 
+// Add a sample to the gui audio ring buffer
+void Synth::update_gui_audio_buffer(float& sample) {
+	// Get current write index (to write at that point)
+	int idx = gui_audio_buffer_write_idx.load(std::memory_order_relaxed);
+	gui_audio_buffer[idx] = sample;
+
+	// Increment the write index and wrap if neccessary
+	gui_audio_buffer_write_idx.store((idx+1) % GUI_AUDIO_BUFFER_SIZE, std::memory_order_relaxed);
+}
+
+// Called from gui thread!
+void Synth::copy_gui_audio_buffer(float* destination) {
+	// Get current write index
+	int idx = gui_audio_buffer_write_idx.load(std::memory_order_relaxed);
+	for(int i = 0; i < GUI_AUDIO_BUFFER_SIZE; i++) {
+		destination[i] = gui_audio_buffer[(idx+i)%GUI_AUDIO_BUFFER_SIZE];
+	}
+}
+
 // ~ MAIN PROCESS LOOP ~
 // Output must be between -1.0 - 1.0
 void Synth::process(float** output_buffers, uint32_t buffer_size, std::vector<SynthMidiNoteEvent>& midi_note_events) {
-
-	
 	size_t midi_event_ptr = 0;
 	// Loop through buffer
 	for(uint32_t i = 0; i < buffer_size; ++i) {
@@ -93,6 +110,8 @@ void Synth::process(float** output_buffers, uint32_t buffer_size, std::vector<Sy
 		}
 		output_buffers[0][i] = mixed_sample;
 		output_buffers[1][i] = mixed_sample;
+		// Update gui audio buffer with this sample
+		update_gui_audio_buffer(mixed_sample);
 	}
 }
 

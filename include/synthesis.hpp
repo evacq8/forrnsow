@@ -1,12 +1,14 @@
 #pragma once
 #include <stdint.h>
 #include <vector>
+#include <atomic>
 
 #include "envelope.hpp"
 #include "oscillator.hpp"
 #include "biquad.hpp"
 
-#define MAX_POLYPHONY 20
+#define MAX_POLYPHONY 20 // Notes array size
+#define GUI_AUDIO_BUFFER_SIZE 1024 // Buffer size that is fed into gui
 
 // Struct used for sending Midi note event info to the synth
 struct SynthMidiNoteEvent {
@@ -46,4 +48,14 @@ class Synth {
 		Notes notes;
 		Synth();
 		void process(float** output_buffers, uint32_t buffer_size, std::vector<SynthMidiNoteEvent>& midi_note_events);
+		// This function is used to copy the gui audio ring buffer from audio thread to gui thread.
+		void copy_gui_audio_buffer(float* destination);
+	private:
+		// A ring buffer for gui to grab audio with thread safety
+		float gui_audio_buffer[GUI_AUDIO_BUFFER_SIZE] = {0};
+		// An index to keep track of current write position in the ring buffer
+		// It is atomic because it is modified in audio thread and read in gui thread
+		std::atomic<int> gui_audio_buffer_write_idx{0};
+		// Helper function to update the gui ring buffer every audio frame
+		void update_gui_audio_buffer(float& sample);
 };

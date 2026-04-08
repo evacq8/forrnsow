@@ -1,6 +1,10 @@
 #include "gui.hpp"
 
-GUI::GUI(const clap_window_t* window, struct Synth* synth) {
+
+
+GUI::GUI(const clap_window_t* window, struct Synth* the_synth) {
+	synth = the_synth;
+
 	display = XOpenDisplay(NULL);
 	parent_window = (Window)window->x11;
 	int attributes[] = {
@@ -82,11 +86,14 @@ void GUI::render() {
 									ImGuiWindowFlags_NoCollapse;
 	// Draw!
 	ImGui::Begin("FORRNSOW", nullptr, window_flags);
-	ImGui::Text("Hello, world");
-	static float freq = 440.0f;
-	ImGui::SliderFloat("Freq", &freq, 20.0f, 2000.0f);
-	ImGui::Text("Frequency: %f", freq);
+
+	ImGui::Text("[forrnsow]");
+	float audio[GUI_AUDIO_BUFFER_SIZE];
+	synth->copy_gui_audio_buffer(audio);
+	ImGui::PlotLines("Oscilloscope", audio, GUI_AUDIO_BUFFER_SIZE, 0, NULL, -1.0f, 1.0f, ImVec2(0,150));
+
 	ImGui::End();
+	// Draw end...
 	
 	ImGui::Render();
 	glXMakeCurrent(display, child_window, glContext);
