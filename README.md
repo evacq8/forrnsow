@@ -37,15 +37,15 @@ note: all my testing is done on linux wayland on the reaper daw. i'm not sure if
 git clone --recursive https://github.com/evacq8/forrnsow.git
 cd forrnsow
 
-# build
-make
-mkdir -p ~/.clap
-cp forrnsow.clap ~/.clap/forrnsow.clap
+# build and install
+cmake -B build
+cmake --build build -j$(nproc)
+# note: forrnsow.clap will automatically be copied to the ~/.clap folder
 ```
 
 ## todo
 
-- [ ] incremental builds
+- [x] incremental builds
 - [ ] ability to draw custom waveforms in the gui and save/load them.
 - [ ] more robust pitch modulation (move it into oscillator.cpp)
     - [ ] ..and pitchwheel functionality!
