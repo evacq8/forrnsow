@@ -1,7 +1,5 @@
 #include "gui.hpp"
 
-
-
 GUI::GUI(const clap_window_t* window, struct Synth* the_synth) {
 	synth = the_synth;
 
@@ -39,13 +37,15 @@ GUI::GUI(const clap_window_t* window, struct Synth* the_synth) {
 
 	// ImGui
 	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
+	imgui_context = ImGui::CreateContext();
+	ImGui::SetCurrentContext(imgui_context);
 	ImGui::StyleColorsDark();
 	ImGui_ImplOpenGL3_Init("#version 130");
 };
 
 GUI::~GUI() {
 	// ImGui
+	ImGui::SetCurrentContext(imgui_context);
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui::DestroyContext();
 	// X11
@@ -57,6 +57,7 @@ GUI::~GUI() {
 }
 
 void GUI::render() {
+	ImGui::SetCurrentContext(imgui_context);
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize = ImVec2(800, 600);
 	io.DeltaTime = 1.0f / 60.0f;
@@ -74,7 +75,7 @@ void GUI::render() {
 			if(ev.xbutton.button == Button3) io.AddMouseButtonEvent(1, down); // Right click
 		}
 	}
-
+	
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui::NewFrame();
 
@@ -88,9 +89,41 @@ void GUI::render() {
 	ImGui::Begin("FORRNSOW", nullptr, window_flags);
 
 	ImGui::Text("[forrnsow]");
+
 	float audio[GUI_AUDIO_BUFFER_SIZE];
+	float spectrum[GUI_AUDIO_BUFFER_SIZE/2];
 	synth->copy_gui_audio_buffer(audio);
+
 	ImGui::PlotLines("Oscilloscope", audio, GUI_AUDIO_BUFFER_SIZE, 0, NULL, -1.0f, 1.0f, ImVec2(0,150));
+
+	apply_hann_window(audio, GUI_AUDIO_BUFFER_SIZE);
+	discrete_fourier_transform(audio, spectrum, GUI_AUDIO_BUFFER_SIZE);
+
+	// DRAW SPECTRAL MAP
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	ImVec2 pos = ImGui::GetCursorScreenPos();
+	float width = ImGui::GetContentRegionAvail().x;
+	float height = 150.0f;
+	const float min_freq = 20.0f;
+	const float max_freq = 20000.0f;
+	draw_list->AddRectFilled(pos, ImVec2(pos.x + width, pos.y + height), IM_COL32(30, 30, 30, 255)); // Draw background rectangle
+	// Draw bin bars
+	for (int x = 0; x < (int)width; x++) {
+		float t = (float)x/width;
+		float freq = min_freq * pow(max_freq / min_freq, t);
+		int bin = (int)(freq / (44100.0f / GUI_AUDIO_BUFFER_SIZE));
+		if(bin>=0 && bin < GUI_AUDIO_BUFFER_SIZE / 2) {
+			float magnitude = spectrum[bin];
+			float h = magnitude * 3000.0f;
+			if (h > height) h = height;
+			draw_list->AddLine(
+				ImVec2(pos.x + x, pos.y + height),
+				ImVec2(pos.x + x, pos.y + height - h),
+				IM_COL32(255, 255, 255, 255)
+			);
+		}
+	}
+	ImGui::Dummy(ImVec2(0, height));
 
 	ImGui::End();
 	// Draw end...

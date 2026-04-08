@@ -11,6 +11,8 @@
 Note::Note() {
 	envelope.state = Envelope::IDLE;
 	primary_oscillator.function = Waveforms::sawtooth;
+	vibrato_oscillator.function = Waveforms::sine;
+	vibrato_oscillator.set_frequency(5.5f, 44100);
 	// formants for the 'ahh' vowel
 	formants.add(650.0f,  1.2f, 1.0f, 44100);
     formants.add(1080.0f, 2.5f, 0.4f, 44100);
@@ -102,6 +104,19 @@ void Synth::process(float** output_buffers, uint32_t buffer_size, std::vector<Sy
 			// Update envelope levelz
 			float gain = notes[n].envelope.update();
 
+			// ~ Modulate frequency ~
+			// Calculate a new increment (i) from old increment (i_0) but plus N semitones:
+			// i = i_0 * 2^(N/12)
+			// N = oscillator_output * semitones
+			float modulated_increment = (
+						notes[n].primary_oscillator.increment *
+						powf(2.0f, (notes[n].vibrato_oscillator.tick()*0.3f)/12.0f)
+					);
+			// Calculate the difference between the two so we know how much to add to reach the new modulated frequency.
+			float increment_diff = 	notes[n].primary_oscillator.increment - 
+									modulated_increment;
+			// Add it.
+			notes[n].primary_oscillator.phase+=increment_diff;
 
 			// Generate Sample
 			float sample = notes[n].primary_oscillator.tick() * gain * 0.2f;

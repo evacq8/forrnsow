@@ -13,7 +13,8 @@ SRC = src/entry.cpp \
 	  src/envelope.cpp \
 	  src/oscillator.cpp \
 	  src/biquad.cpp \
-	  src/gui.cpp
+	  src/gui.cpp \
+	  src/fourier_transform.cpp
 
 IMGUI_SRC = extern/imgui/imgui.cpp \
 			extern/imgui/imgui_draw.cpp \
