@@ -8,7 +8,7 @@
 #include "biquad.hpp"
 
 #define MAX_POLYPHONY 20 // Notes array size
-#define GUI_AUDIO_BUFFER_SIZE 1024 // Buffer size that is fed into gui
+#define GUI_AUDIO_BUFFER_SIZE 2048 // Buffer size that is fed into gui
 
 // Struct used for sending Midi note event info to the synth
 struct SynthMidiNoteEvent {

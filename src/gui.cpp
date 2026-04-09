@@ -97,7 +97,7 @@ void GUI::render() {
 	ImGui::PlotLines("Oscilloscope", audio, GUI_AUDIO_BUFFER_SIZE, 0, NULL, -1.0f, 1.0f, ImVec2(0,150));
 
 	apply_hann_window(audio, GUI_AUDIO_BUFFER_SIZE);
-	discrete_fourier_transform(audio, spectrum, GUI_AUDIO_BUFFER_SIZE);
+	fast_fourier_transform(audio, spectrum, GUI_AUDIO_BUFFER_SIZE);
 
 	// DRAW SPECTRAL MAP
 	ImDrawList* draw_list = ImGui::GetWindowDrawList();

@@ -1,7 +1,7 @@
 #include "fourier_transform.hpp"
 
-#include <complex>
 #include <cmath>
+#include <vector>
 
 void discrete_fourier_transform(const float* input, float* output, int input_size) {
 	// Number of (possible) output freqeuncies
@@ -24,6 +24,70 @@ void discrete_fourier_transform(const float* input, float* output, int input_siz
 		// Take the average of the mass sum to get average center of mass
 		// Which says how prominent frequency k is in the signal.
 		output[k] = std::abs(sum) / input_size;
+	}
+}
+
+
+// Reorder data to mimic recursive even/odd splits
+// Only works if N is a power of 2
+void bit_reverse(std::vector<std::complex<float>>& data, int N) {
+	// Loop through every index
+	int j = 0;
+	for (int i = 0; i < N; i++) {
+		if(i < j) std::swap(data[i], data[j]); // prevent unswaping
+
+		// This bit acts as a counter for bit manipulation
+		// Start at the Most Significant Bit which is required to represent N
+		int target_bit = N >> 1;
+		// If there are 1's hogging the MSB and possibly the subsequent bits
+		// ..delete them and move right (towards LSB) until we reach a 0, 
+		while(j & target_bit) {
+			j ^= target_bit; // flip the 1 to 0
+			target_bit >>= 1; // move the counter to the right
+		}
+		// ..then replace that 0 with a 1.
+		// If there isn't any 1's hogging the MSB just replace the MSB w/ 1!
+		j ^= target_bit;
+	}
+}
+
+// Cooley-Tukey (Radix-2)
+// Works only when N is a power of 2
+void fast_fourier_transform(const float* input, float* output, int N) {
+	// Turn input into complex numbers with imaginary parts of 0
+	std::vector<std::complex<float>> input_complex(N);
+	for (int i = 0; i < N; i++)
+		input_complex[i] = std::complex<float>(input[i], 0);
+	// Bit-reverse indices
+	bit_reverse(input_complex, N);
+
+	// Loop through sub-group sizes (powers of 2) until we reach N
+	for (int s = 2; s <= N; s*=2) {
+		// Calculate twiddle step amount
+		float twiddle_step_angle = -2.0f * M_PI / s;
+		std::complex<float> twiddle_step(
+				std::cos(twiddle_step_angle), 
+				std::sin(twiddle_step_angle));
+
+		// Loop through sub-groups
+		for (int k = 0; k < N; k+=s) {
+			// Twiddle factor (start at 0 deg rotation)
+			std::complex<float> twiddle(1.0f, 0.0f);
+			// Loop through the first half of this sub-group
+			for (int j = 0; j < s / 2; j++) {
+				std::complex<float> u = input_complex[k+j];
+				std::complex<float> t = twiddle * input_complex[k+j+s/2];
+
+				input_complex[k + j] = u+t;
+				input_complex[k + j + s / 2] = u-t;
+				twiddle*=twiddle_step;
+			}
+		}
+	}
+
+	// Store frequency bin magnitudes to output
+	for (int k = 0; k < N/2; k++) {
+		output[k] = std::abs(input_complex[k])/N;
 	}
 }
 
