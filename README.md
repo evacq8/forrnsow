@@ -4,6 +4,7 @@ a basic synth which uses the **cl**ever **a**udio **p**lugin standard.
 
 the code is really messy and bad and horrible and i'm not a professional by any stretch of the imagination...
 
+right now all settings are hardcoded. i'm yet to implement a more dynamic synth editor in the gui...
 
 ## features...
 
@@ -14,7 +15,7 @@ the code is really messy and bad and horrible and i'm not a professional by any 
 * linear adsr envelopes
 * formant filters (w/ biquad)
 * lfo vibrato
-* basic gui with oscilloscope and spectrum chart
+* basic gui with spectral visualizer
     * uses dearimgui
     * only works on x11 (xwayland also works if you're using wayland)
     * plan on adding microsoft windows support in the future (hopefully)
@@ -25,7 +26,6 @@ note: all my testing is done on linux wayland on the reaper daw. i'm not sure if
 
 * gui currently doesn't work on microsoft windows
 * faint clicking sound when reactivating a note as it is fading (release)
-* currently uses the "slow" discrete fourier transform rather than the fast fourier transform.
 * opening multiple guis will cause one of them to be blank (x11 implementation issue)
 * expects a sample-rate of 44100 hz because this is currently hardcoded into all the calculations
 
@@ -45,11 +45,11 @@ cmake --build build -j$(nproc)
 
 ## todo
 
-- [x] incremental builds
+- [ ] more robust ui code (right now its a mess)
 - [ ] ability to draw custom waveforms in the gui and save/load them.
 - [ ] more robust pitch modulation (move it into oscillator.cpp)
     - [ ] ..and pitchwheel functionality!
-- [ ] replace normal dft with fast fourier transform for better performance at higher input sizes
+- [x] replace normal dft with fast fourier transform for better performance at higher input sizes
 - [ ] seperate note logic into its own file
-- [ ] non-linear adsr envelopes
 - [ ] get sample rate from daw to adjust calculations (assumes 44100 hz right now)
+- [ ] support for microsoft windows

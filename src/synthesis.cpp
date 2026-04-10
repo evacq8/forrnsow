@@ -120,7 +120,7 @@ void Synth::process(float** output_buffers, uint32_t buffer_size, std::vector<Sy
 
 			// Generate Sample
 			float sample = notes[n].primary_oscillator.tick() * gain * 0.2f;
-			sample = notes[n].formants.process(sample);
+			//sample = notes[n].formants.process(sample);
 			mixed_sample += sample;
 		}
 		output_buffers[0][i] = mixed_sample;

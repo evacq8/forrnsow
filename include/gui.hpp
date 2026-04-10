@@ -14,6 +14,8 @@ class GUI {
 		GUI(const clap_window_t* window, struct Synth* synth);
 		~GUI();
 		void render();
+		// Draw the gui
+		void draw();
 
 		// ImGui
 		ImGuiContext* imgui_context;
@@ -25,4 +27,22 @@ class GUI {
 		XVisualInfo* visualInfo = nullptr;
 
 		struct Synth* synth;
+
+		ImFont* fontRegular = nullptr;
+		ImFont* fontBold = nullptr;
+		ImFont* fontMedium = nullptr;
+		ImFont* fontRegularHeader = nullptr;
+
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar |
+										ImGuiWindowFlags_NoResize |
+										ImGuiWindowFlags_NoMove |
+										ImGuiWindowFlags_NoCollapse;
+	private:
+		// keep track of GUI tabs
+		enum GuiTab {
+			TAB_VISUALS,
+			TAB_HOME,
+			TAB_AMT
+		};
+		GuiTab current_tab = TAB_HOME;
 };
