@@ -6,6 +6,7 @@
 #include "envelope.hpp"
 #include "oscillator.hpp"
 #include "biquad.hpp"
+#include "delay_line.hpp"
 
 #define MAX_POLYPHONY 20 // Notes array size
 #define GUI_AUDIO_BUFFER_SIZE 2048 // Buffer size that is fed into gui
@@ -26,6 +27,7 @@ class Note {
 		Oscillator primary_oscillator;
 		Oscillator vibrato_oscillator;
 		BiquadBandpassBank formants;
+		DelayLine delayline = DelayLine(1.0f, 44100);
 
 		Note();
 };
@@ -35,7 +37,6 @@ class Notes {
 		std::vector<Note> elements;
 	public:
 		Notes();
-
 		// Call every frame
 		void handle_note_event(SynthMidiNoteEvent& note_event, uint32_t& current_frame);
 
