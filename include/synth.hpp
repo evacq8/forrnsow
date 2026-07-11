@@ -6,10 +6,6 @@
 #include <string>
 #include <variant>
 
-#define MAX_POLYPHONY 16
-#define SAMPLE_RATE 44100 // TODO don't hard core this (edit: hard core?? I mean hard code :SOB)
-#define BUFFER_SIZE 512 // TODO this too
-
 struct MidiNoteEvent {
 	uint32_t frame_offset; // which frame of the buffer did the event happen?
 	int16_t note; // midi note number, 0 = C-1, 127 = G9
@@ -22,7 +18,7 @@ struct MidiNoteEvent {
 struct HostContext {
 	double sample_rate = 44100;
 	uint32_t buffer_size = 512;
-	double** output_buffers = nullptr;
+	float** output_buffers = nullptr;
 	int max_polyphony = 16;
 };
 
@@ -73,11 +69,14 @@ class Parameter {
 
 class Node {
 protected:
+	const HostContext& host_context; // a pointer to the synth's HostContext so this node knows required info (e.g. sample rate)
+public:
 	std::vector<InputPin> pins_in;
 	std::vector<OutputPin> pins_out;
 	std::vector<Parameter> params;
-public:
-	virtual void process();
+
+	Node(const HostContext& context) : host_context(context) {}
+	virtual void process() = 0;
 	virtual ~Node() = default;
 };
 
@@ -90,20 +89,24 @@ private:
 	double phase = 0.0; // 0.0-1.0 (not 0.0 to 2π)
 public:
 	void process();
-	NodeOscillator();
+	NodeOscillator(const HostContext& context);
 };
 
 class NodeMonoOutput : public Node {
 public:
 	void process();
-	NodeMonoOutput();
+	NodeMonoOutput(const HostContext& context);
 };
 
 // --
-// -- SYNTH
+// -- SYNTH TODO
 // -- * an instance of the synth
 class Synth {
 public:
 	HostContext host_context;
-
+	std::vector<std::unique_ptr<Node>> global_nodes;
+	// TESTING
+	PinBuffer test_frequency_buffer;
+	Synth();
+	void process(float** output_bufs, uint32_t buffer_size, std::vector<MidiNoteEvent> midi_notes);
 };

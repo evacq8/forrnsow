@@ -1,6 +1,6 @@
 #include "gui.hpp"
 #include "fonts/SourceCodeProFonts.h"
-
+/*
 GUI::GUI(const clap_window_t* window, struct Synth* the_synth) {
 	synth = the_synth;
 
@@ -225,7 +225,7 @@ void GUI::render() {
 	glXSwapBuffers(display, child_window);
 }
 
-
+*/
 
 
 

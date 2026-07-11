@@ -1,6 +1,5 @@
 #pragma once
 #include <clap/clap.h>
-#include "synthesis.hpp"
 #include "fourier_transform.hpp"
 #include <X11/Xlib.h>
 #include <GL/glx.h>
